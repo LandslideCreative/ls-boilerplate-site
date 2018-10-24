@@ -1,0 +1,24 @@
+{
+  "name": "landslide",
+  "version": "2.0.0",
+  "authors": [
+    "ZURB <foundation@zurb.com>",
+    "Todd Motto",
+    "Landslide Creative <info@landslidecreative.com>"
+  ],
+  "description": "Wordpress theme by Landslide Creative combining Foundation 6 and HTML5 Blank.",
+  "main": "gulpfile.js",
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "foundation-sites": "~6.3.0",
+    "motion-ui": "~1.2.2"
+  },
+  "private": true
+}
