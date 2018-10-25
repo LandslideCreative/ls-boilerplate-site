@@ -48,7 +48,7 @@ function copy() {
 
 // Copy page templates into finished HTML files
 function pages() {
-  return gulp.src(PATHS.theme)
+  return gulp.src(PATHS.site)
     .pipe(gulp.dest(PATHS.dist));
 }
 
@@ -127,7 +127,7 @@ function reload(done) {
 // Watch for changes to static assets, pages, Sass, and JavaScript
 function watch() {
   gulp.watch(PATHS.assets, copy);
-  gulp.watch('src/theme/**/*.*').on('all', gulp.series(pages, browser.reload));
+  gulp.watch('src/site/**/*.*').on('all', gulp.series(pages, browser.reload));
   gulp.watch('src/assets/scss/**/*.scss').on('all', sass);
   gulp.watch('src/assets/js/**/*.js').on('all', gulp.series(javascript, browser.reload));
   gulp.watch('src/assets/img/**/*').on('all', gulp.series(images, browser.reload));
