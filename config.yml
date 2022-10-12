@@ -2,13 +2,12 @@
 PORT: 8000
 
 # Your project's server will proxy this localhost address
-LOCALHOST: localhost.boilerplate
+LOCALHOST: https://projectname.localhost
 
-# Autoprefixer will make sure your CSS works with these browsers
-COMPATIBILITY:
-  - "last 2 versions"
-  - "ie >= 9"
-  - "ios >= 7"
+SSL:
+  status: true
+  key: "/opt/homebrew/etc/httpd/certs/localhost-key.pem"
+  cert: "/opt/homebrew/etc/httpd/certs/localhost.pem"
 
 # Gulp will reference these paths when it copies files
 PATHS:

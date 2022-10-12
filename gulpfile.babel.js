@@ -10,6 +10,7 @@ import fs            from 'fs';
 import webpackStream from 'webpack-stream';
 import webpack2      from 'webpack';
 import named         from 'vinyl-named';
+import autoprefixer  from 'autoprefixer';
 
 // Load all Gulp plugins into one variable
 const $ = plugins();
@@ -18,7 +19,7 @@ const $ = plugins();
 const PRODUCTION = !!(yargs.argv.production);
 
 // Load settings from settings.yml
-const { COMPATIBILITY, PORT, LOCALHOST, PATHS } = loadConfig();
+const { PORT, LOCALHOST, SSL, PATHS } = loadConfig();
 
 function loadConfig() {
   let ymlFile = fs.readFileSync('config.yml', 'utf8');
@@ -54,18 +55,22 @@ function pages() {
 
 // Compile Sass into CSS
 // In production, the CSS is compressed
+// Compile Sass into CSS
+// In production, the CSS is compressed
 function sass() {
+  const postCssPlugins = [
+    // Autoprefixer
+    autoprefixer(),
+
+  ].filter(Boolean);
+
   return gulp.src('src/assets/scss/app.scss')
     .pipe($.sourcemaps.init())
     .pipe($.sass({
       includePaths: PATHS.sass
     })
       .on('error', $.sass.logError))
-    .pipe($.autoprefixer({
-      browsers: COMPATIBILITY
-    }))
-    // Comment in the pipe below to run UnCSS in production
-    //.pipe($.if(PRODUCTION, $.uncss(UNCSS_OPTIONS)))
+    .pipe($.postcss(postCssPlugins))
     .pipe($.if(PRODUCTION, $.cleanCss({ compatibility: 'ie9' })))
     .pipe($.if(!PRODUCTION, $.sourcemaps.write()))
     .pipe(gulp.dest(PATHS.dist + '/assets/css'))
@@ -73,19 +78,24 @@ function sass() {
 }
 
 let webpackConfig = {
+  mode: (PRODUCTION ? 'production' : 'development'),
   module: {
     rules: [
       {
-        test: /.js$/,
-        use: [
-          {
-            loader: 'babel-loader'
+        test: /\.js$/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: [ "@babel/preset-env" ],
+            compact: false
           }
-        ]
+        }
       }
     ]
-  }
+  },
+  devtool: !PRODUCTION && 'source-map'
 }
+
 // Combine JavaScript into one file
 // In production, the file is minified
 function javascript() {
@@ -93,7 +103,7 @@ function javascript() {
     .pipe(named())
     .pipe($.sourcemaps.init())
     .pipe(webpackStream(webpackConfig, webpack2))
-    .pipe($.if(PRODUCTION, $.uglify()
+    .pipe($.if(PRODUCTION, $.terser()
       .on('error', e => { console.log(e); })
     ))
     .pipe($.if(!PRODUCTION, $.sourcemaps.write()))
@@ -104,18 +114,29 @@ function javascript() {
 // In production, the images are compressed
 function images() {
   return gulp.src('src/assets/img/**/*')
-    .pipe($.if(PRODUCTION, $.imagemin({
-      progressive: true
-    })))
+    .pipe($.if(PRODUCTION, $.imagemin([
+      $.imagemin.mozjpeg({ progressive: true }),
+    ])))
     .pipe(gulp.dest(PATHS.dist + '/assets/img'));
 }
 
 // Start a server with BrowserSync to preview the site in
 function server(done) {
-  browser.init({
-    proxy: LOCALHOST, port: PORT
-  });
-  done();
+  if (SSL.status) {
+    browser.init({
+      proxy: LOCALHOST,
+      https: {
+        cert: SSL.cert,
+        key: SSL.key,
+      },
+      port: PORT
+    }, done);
+  } else {
+    browser.init({
+      proxy: LOCALHOST,
+      port: PORT
+    }, done);
+  }
 }
 
 // Reload the browser with BrowserSync
